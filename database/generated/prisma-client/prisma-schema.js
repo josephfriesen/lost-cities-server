@@ -394,6 +394,7 @@ type Game {
   currentRound: Int!
   gameInProgress: Boolean!
   Winner: Player
+  currentPlayer: Int
 }
 
 type GameConnection {
@@ -412,6 +413,7 @@ input GameCreateInput {
   currentRound: Int!
   gameInProgress: Boolean
   Winner: PlayerCreateOneWithoutGamesWonInput
+  currentPlayer: Int
 }
 
 input GameCreateManyWithoutPlayer1Input {
@@ -438,6 +440,7 @@ input GameCreateWithoutPlayer1Input {
   currentRound: Int!
   gameInProgress: Boolean
   Winner: PlayerCreateOneWithoutGamesWonInput
+  currentPlayer: Int
 }
 
 input GameCreateWithoutPlayer2Input {
@@ -449,6 +452,7 @@ input GameCreateWithoutPlayer2Input {
   currentRound: Int!
   gameInProgress: Boolean
   Winner: PlayerCreateOneWithoutGamesWonInput
+  currentPlayer: Int
 }
 
 input GameCreateWithoutWinnerInput {
@@ -460,6 +464,7 @@ input GameCreateWithoutWinnerInput {
   player2Score: Int
   currentRound: Int!
   gameInProgress: Boolean
+  currentPlayer: Int
 }
 
 type GameEdge {
@@ -484,6 +489,8 @@ enum GameOrderByInput {
   currentRound_DESC
   gameInProgress_ASC
   gameInProgress_DESC
+  currentPlayer_ASC
+  currentPlayer_DESC
 }
 
 type GamePreviousValues {
@@ -495,6 +502,7 @@ type GamePreviousValues {
   player2Score: Int!
   currentRound: Int!
   gameInProgress: Boolean!
+  currentPlayer: Int
 }
 
 input GameScalarWhereInput {
@@ -562,6 +570,14 @@ input GameScalarWhereInput {
   currentRound_gte: Int
   gameInProgress: Boolean
   gameInProgress_not: Boolean
+  currentPlayer: Int
+  currentPlayer_not: Int
+  currentPlayer_in: [Int!]
+  currentPlayer_not_in: [Int!]
+  currentPlayer_lt: Int
+  currentPlayer_lte: Int
+  currentPlayer_gt: Int
+  currentPlayer_gte: Int
   AND: [GameScalarWhereInput!]
   OR: [GameScalarWhereInput!]
   NOT: [GameScalarWhereInput!]
@@ -595,6 +611,7 @@ input GameUpdateInput {
   currentRound: Int
   gameInProgress: Boolean
   Winner: PlayerUpdateOneWithoutGamesWonInput
+  currentPlayer: Int
 }
 
 input GameUpdateManyDataInput {
@@ -603,6 +620,7 @@ input GameUpdateManyDataInput {
   player2Score: Int
   currentRound: Int
   gameInProgress: Boolean
+  currentPlayer: Int
 }
 
 input GameUpdateManyMutationInput {
@@ -611,6 +629,7 @@ input GameUpdateManyMutationInput {
   player2Score: Int
   currentRound: Int
   gameInProgress: Boolean
+  currentPlayer: Int
 }
 
 input GameUpdateManyWithoutPlayer1Input {
@@ -660,6 +679,7 @@ input GameUpdateWithoutPlayer1DataInput {
   currentRound: Int
   gameInProgress: Boolean
   Winner: PlayerUpdateOneWithoutGamesWonInput
+  currentPlayer: Int
 }
 
 input GameUpdateWithoutPlayer2DataInput {
@@ -671,6 +691,7 @@ input GameUpdateWithoutPlayer2DataInput {
   currentRound: Int
   gameInProgress: Boolean
   Winner: PlayerUpdateOneWithoutGamesWonInput
+  currentPlayer: Int
 }
 
 input GameUpdateWithoutWinnerDataInput {
@@ -682,6 +703,7 @@ input GameUpdateWithoutWinnerDataInput {
   player2Score: Int
   currentRound: Int
   gameInProgress: Boolean
+  currentPlayer: Int
 }
 
 input GameUpdateWithWhereUniqueWithoutPlayer1Input {
@@ -788,6 +810,14 @@ input GameWhereInput {
   gameInProgress: Boolean
   gameInProgress_not: Boolean
   Winner: PlayerWhereInput
+  currentPlayer: Int
+  currentPlayer_not: Int
+  currentPlayer_in: [Int!]
+  currentPlayer_not_in: [Int!]
+  currentPlayer_lt: Int
+  currentPlayer_lte: Int
+  currentPlayer_gt: Int
+  currentPlayer_gte: Int
   AND: [GameWhereInput!]
   OR: [GameWhereInput!]
   NOT: [GameWhereInput!]
@@ -1121,6 +1151,7 @@ type Query {
 type Round {
   id: ID!
   createdAt: DateTime!
+  roundNumInGame: Int!
   drawDeck(where: CardInstanceWhereInput, orderBy: CardInstanceOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [CardInstance!]
   player1Hand(where: CardWhereInput, orderBy: CardOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Card!]
   player1Tableau(where: CardWhereInput, orderBy: CardOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Card!]
@@ -1138,6 +1169,7 @@ type RoundConnection {
 }
 
 input RoundCreateInput {
+  roundNumInGame: Int!
   drawDeck: CardInstanceCreateManyInput
   player1Hand: CardCreateManyInput
   player1Tableau: CardCreateManyInput
@@ -1163,6 +1195,8 @@ enum RoundOrderByInput {
   id_DESC
   createdAt_ASC
   createdAt_DESC
+  roundNumInGame_ASC
+  roundNumInGame_DESC
   player1Score_ASC
   player1Score_DESC
   player2Score_ASC
@@ -1174,6 +1208,7 @@ enum RoundOrderByInput {
 type RoundPreviousValues {
   id: ID!
   createdAt: DateTime!
+  roundNumInGame: Int!
   player1Score: Int!
   player2Score: Int!
 }
@@ -1201,6 +1236,14 @@ input RoundScalarWhereInput {
   createdAt_lte: DateTime
   createdAt_gt: DateTime
   createdAt_gte: DateTime
+  roundNumInGame: Int
+  roundNumInGame_not: Int
+  roundNumInGame_in: [Int!]
+  roundNumInGame_not_in: [Int!]
+  roundNumInGame_lt: Int
+  roundNumInGame_lte: Int
+  roundNumInGame_gt: Int
+  roundNumInGame_gte: Int
   player1Score: Int
   player1Score_not: Int
   player1Score_in: [Int!]
@@ -1241,6 +1284,7 @@ input RoundSubscriptionWhereInput {
 }
 
 input RoundUpdateDataInput {
+  roundNumInGame: Int
   drawDeck: CardInstanceUpdateManyInput
   player1Hand: CardUpdateManyInput
   player1Tableau: CardUpdateManyInput
@@ -1252,6 +1296,7 @@ input RoundUpdateDataInput {
 }
 
 input RoundUpdateInput {
+  roundNumInGame: Int
   drawDeck: CardInstanceUpdateManyInput
   player1Hand: CardUpdateManyInput
   player1Tableau: CardUpdateManyInput
@@ -1263,6 +1308,7 @@ input RoundUpdateInput {
 }
 
 input RoundUpdateManyDataInput {
+  roundNumInGame: Int
   player1Score: Int
   player2Score: Int
 }
@@ -1279,6 +1325,7 @@ input RoundUpdateManyInput {
 }
 
 input RoundUpdateManyMutationInput {
+  roundNumInGame: Int
   player1Score: Int
   player2Score: Int
 }
@@ -1322,6 +1369,14 @@ input RoundWhereInput {
   createdAt_lte: DateTime
   createdAt_gt: DateTime
   createdAt_gte: DateTime
+  roundNumInGame: Int
+  roundNumInGame_not: Int
+  roundNumInGame_in: [Int!]
+  roundNumInGame_not_in: [Int!]
+  roundNumInGame_lt: Int
+  roundNumInGame_lte: Int
+  roundNumInGame_gt: Int
+  roundNumInGame_gte: Int
   drawDeck_every: CardInstanceWhereInput
   drawDeck_some: CardInstanceWhereInput
   drawDeck_none: CardInstanceWhereInput

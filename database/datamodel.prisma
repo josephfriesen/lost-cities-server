@@ -22,11 +22,13 @@ type Game {
   currentRound: Int!
   gameInProgress: Boolean! @default(value: "true")
   Winner: Player @relation(name: "GamesWon")
+  currentPlayer: Int @default(value: 1)
 }
 
 type Round {
   id: ID! @unique
   createdAt: DateTime!
+  roundNumInGame: Int!
   drawDeck: [CardInstance!]! @relation(name: "CardsInDrawDeck")
   player1Hand: [Card!]! @relation(name: "CardsInPlayer1Hand")
   player1Tableau: [Card!]! @relation(name: "CardsInPlayer1Tableau")

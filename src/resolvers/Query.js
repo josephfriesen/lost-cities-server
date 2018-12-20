@@ -22,7 +22,19 @@ async function constructRandomizedDeckInstances(parent, args, context, info) {
   return output;
 }
 
+function getPlayerHand(parent, args, context, info) {
+  let hand;
+  if (args.player == 1) { hand = "player1Hand" }
+  else { hand = "player2Hand" }
+  return context.db.query.rounds({
+    where: {
+      id: args.id
+    }
+  }, info)
+}
+
 module.exports = {
   getAllCards,
   constructRandomizedDeckInstances,
+  getPlayerHand,
 }

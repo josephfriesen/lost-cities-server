@@ -1,20 +1,14 @@
-# import Player, Game, Round, Card from "./generated/prisma.graphql"
+# import Player, Game, Round, RoundCreateInput, Card from "./generated/prisma.graphql"
 
 type Query {
   getAllCards: [Card!]!
   constructRandomizedDeckInstances: [CardInstance!]!
+  getPlayerHand(player: Int, round: ID): [Card!]!
 }
 
 type Mutation {
   newPlayer(name: String, email: String): Player
   newGame(player1: ID!, player2: ID!, roundsNum: Int): Game
-  newRound: Round
+  generateRoundInput: Round
+  playACardToTableau(gameId: ID!, cardToPlay: ID!): Round
 }
-# 
-# input PlayerInput {
-#   connect: idInput
-# }
-#
-# input idInput {
-#   id: ID
-# }

@@ -1,5 +1,4 @@
 const { getAllCards } = require('./Query');
-const { shuffledCards } = require('../models/cardDecks.js');
 
 // sortCardsByColorAndValue will take an array of card objects as argument and return an array of those same cards sorted first by color, then by expeditionValue (investment cards first)
 function sortCardsByColorAndValue(arr) {
