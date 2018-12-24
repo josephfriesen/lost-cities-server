@@ -112,14 +112,6 @@ async function playACardToTableau(parent, args, context, info) {
     player2Score: newPlayer2Score
   }
 
-  // console.log(`player1Hand: `, updateRoundInput.player1Hand);
-  // console.log(`player1Tableau: `, updateRoundInput.player1Tableau);
-  // console.log(`player1Score: `, updateRoundInput.player1Score);
-  // console.log(`player2Hand: `, updateRoundInput.player2Hand);
-  // console.log(`player2Tableau: `, updateRoundInput.player2Tableau);
-  // console.log(`player2Score: `, updateRoundInput.player2Score);
-  console.log(round.id);
-
   return context.db.mutation.updateRound({
     data: updateRoundInput,
     where: { id: round.id }
