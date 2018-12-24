@@ -1,5 +1,5 @@
 const { getAllCards, constructRandomizedDeckInstances } = require('./Query');
-const { sortCardsByColorAndValue, dealCards, getCardIdsFromConstructedInstances } = require('./GameFunctions');
+const { sortCardsByColorAndValue, dealCards, getCardIdsFromConstructedInstances, getColorScore, getRoundScore } = require('./GameFunctions');
 const { players } = require('../models/players');
 
 function newPlayer(parent, args, context, info) {
@@ -52,7 +52,7 @@ async function playACardToTableau(parent, args, context, info) {
   // gameId
   // player: Int equal to 1 or 2
   // currentRound:
-  // cardToPlay
+  // cardId
   // OUTPUT: context.db.mutation.updateRound(input, info)
   let player;
   let roundNum;
@@ -68,30 +68,41 @@ async function playACardToTableau(parent, args, context, info) {
       rounds(where: { roundNumInGame: ${roundNum} }) {
         id
         player1Hand { id color cardType expeditionValue }
-        player2Tableau { id color cardType expeditionValue }
+        player1Tableau { id color cardType expeditionValue }
         player2Hand { id color cardType expeditionValue }
         player2Tableau { id color cardType expeditionValue }
       }
     }`)
   });
   let round = roundQuery[0].rounds[0];
-  let hand;
+  let originalHand;
   let handKey;
   let tableau;
   let tableauKey;
+  let card;
   if (player == 1) {
-    hand = round.player1Hand;
+    originalHand = round.player1Hand;
     handKey = "player1Hand";
     tableau = round.player1Tableau;
     tableauKey = "player1Tableau";
   } else {
-    hand = round.player2Hand;
+    originalHand = round.player2Hand;
     handKey = "player2Hand";
     tableau = round.player2Tableau;
     tableauKey = "player2Tableau";
   }
-  hand.filter(card => {return (card.id !== args.cardToPlay)})
-  console.log("After filtering, the hand is now: ", hand);
+  const newHand = originalHand.filter(testCard => {
+    if (testCard.id == args.cardId) {
+      card = testCard;
+      return false;
+    } else return true;
+  });
+  const newTableau = tableau.push(card);
+  const player1Score = getRoundScore(player1Tableau);
+  const player2Score = getRoundScore(player2Tableau);
+  const updateRoundInput = {
+    
+  }
   return null;
 }
 
