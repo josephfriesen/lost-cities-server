@@ -84,8 +84,6 @@ function getRoundScore(arr) {
   return score;
 }
 
-console.log(getRoundScore(testTableau));
-
 module.exports = {
   sortCardsByColorAndValue,
   dealCards,

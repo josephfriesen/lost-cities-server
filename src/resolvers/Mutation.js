@@ -48,12 +48,6 @@ async function newGame(parent, args, context, info) {
 }
 
 async function playACardToTableau(parent, args, context, info) {
-  // ARGS:
-  // gameId
-  // player: Int equal to 1 or 2
-  // currentRound:
-  // cardId
-  // OUTPUT: context.db.mutation.updateRound(input, info)
   let player;
   let roundNum;
   const roundQuery = await context.db.query.games({ where: { id: args.gameId } },
@@ -75,35 +69,61 @@ async function playACardToTableau(parent, args, context, info) {
     }`)
   });
   let round = roundQuery[0].rounds[0];
-  let originalHand;
-  let handKey;
-  let tableau;
-  let tableauKey;
   let card;
-  if (player == 1) {
-    originalHand = round.player1Hand;
-    handKey = "player1Hand";
-    tableau = round.player1Tableau;
-    tableauKey = "player1Tableau";
-  } else {
-    originalHand = round.player2Hand;
-    handKey = "player2Hand";
-    tableau = round.player2Tableau;
-    tableauKey = "player2Tableau";
-  }
-  const newHand = originalHand.filter(testCard => {
+  let newPlayer1Hand = [];
+  let newPlayer1TableauRefs = [];
+  let newPlayer2Hand = [];
+  let newPlayer2TableauRefs = [];
+
+  round.player1Hand.forEach(testCard => {
     if (testCard.id == args.cardId) {
       card = testCard;
-      return false;
-    } else return true;
-  });
-  const newTableau = tableau.push(card);
-  const player1Score = getRoundScore(player1Tableau);
-  const player2Score = getRoundScore(player2Tableau);
-  const updateRoundInput = {
-    
+    } else {
+      newPlayer1Hand.push({ id: testCard.id });
+    }
+  })
+  round.player2Hand.forEach(testCard => {
+    if (testCard.id == args.cardId) {
+      card = testCard;
+    } else {
+      newPlayer2Hand.push({ id: testCard.id });
+    }
+  })
+  if (player == 1) {
+    round.player1Tableau.push(card);
+  } else {
+    round.player2Tableau.push(card);
   }
-  return null;
+  round.player1Tableau.forEach(testCard => {
+    newPlayer1TableauRefs.push({ id: testCard.id });
+  })
+  round.player2Tableau.forEach(testCard => {
+    newPlayer2TableauRefs.push({ id: testCard.id });
+  })
+
+  const newPlayer1Score = getRoundScore(round.player1Tableau);
+  const newPlayer2Score = getRoundScore(round.player2Tableau);
+  const updateRoundInput = {
+    player1Hand: { connect: newPlayer1Hand },
+    player1Tableau: { connect: newPlayer1TableauRefs },
+    player1Score: newPlayer1Score,
+    player2Hand: { connect: newPlayer2Hand },
+    player2Tableau: { connect: newPlayer2TableauRefs },
+    player2Score: newPlayer2Score
+  }
+
+  // console.log(`player1Hand: `, updateRoundInput.player1Hand);
+  // console.log(`player1Tableau: `, updateRoundInput.player1Tableau);
+  // console.log(`player1Score: `, updateRoundInput.player1Score);
+  // console.log(`player2Hand: `, updateRoundInput.player2Hand);
+  // console.log(`player2Tableau: `, updateRoundInput.player2Tableau);
+  // console.log(`player2Score: `, updateRoundInput.player2Score);
+  console.log(round.id);
+
+  return context.db.mutation.updateRound({
+    data: updateRoundInput,
+    where: { id: round.id }
+  }, info);
 }
 
 module.exports = {
