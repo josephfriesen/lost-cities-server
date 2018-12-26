@@ -69,47 +69,35 @@ async function playACardToTableau(parent, args, context, info) {
     }`)
   });
   let round = roundQuery[0].rounds[0];
-  let card;
-  let newPlayer1Hand = [];
-  let newPlayer1TableauRefs = [];
-  let newPlayer2Hand = [];
-  let newPlayer2TableauRefs = [];
+  const cardUpdate = [ { id: args.cardId } ];
+  const handUpdate = { disconnect: cardUpdate };
+  const tableauUpdate = { connect: cardUpdate };
+  let roundUpdateInput;
 
-  round.player1Hand.forEach(testCard => {
-    if (testCard.id == args.cardId) {
-      card = testCard;
-    } else {
-      newPlayer1Hand.push({ id: testCard.id });
-    }
-  })
-  round.player2Hand.forEach(testCard => {
-    if (testCard.id == args.cardId) {
-      card = testCard;
-    } else {
-      newPlayer2Hand.push({ id: testCard.id });
-    }
-  })
   if (player == 1) {
-    round.player1Tableau.push(card);
+    round.player1Hand.forEach(testCard => {
+      if (testCard.id == args.cardId) {
+        round.player1Tableau.push(testCard);
+      }
+    })
+    const newPlayer1Score = getRoundScore(round.player1Tableau);
+    updateRoundInput = {
+      player1Score: newPlayer1Score,
+      player1Hand: handUpdate,
+      player1Tableau: tableauUpdate
+    }
   } else {
-    round.player2Tableau.push(card);
-  }
-  round.player1Tableau.forEach(testCard => {
-    newPlayer1TableauRefs.push({ id: testCard.id });
-  })
-  round.player2Tableau.forEach(testCard => {
-    newPlayer2TableauRefs.push({ id: testCard.id });
-  })
-
-  const newPlayer1Score = getRoundScore(round.player1Tableau);
-  const newPlayer2Score = getRoundScore(round.player2Tableau);
-  const updateRoundInput = {
-    player1Hand: { connect: newPlayer1Hand },
-    player1Tableau: { connect: newPlayer1TableauRefs },
-    player1Score: newPlayer1Score,
-    player2Hand: { connect: newPlayer2Hand },
-    player2Tableau: { connect: newPlayer2TableauRefs },
-    player2Score: newPlayer2Score
+    round.player2Hand.forEach(testCard => {
+      if (testCard.id == args.cardId) {
+        round.player2Tableau.push(testCard)
+      }
+    })
+    const newPlayer2Score = getRoundScore(round.player2Tableau);
+    updateRoundInput = {
+      player2Score: newPlayer2Score,
+      player2Hand: handUpdate,
+      player2Tableau: tableauUpdate
+    }
   }
 
   return context.db.mutation.updateRound({
@@ -118,9 +106,14 @@ async function playACardToTableau(parent, args, context, info) {
   }, info);
 }
 
+async function discardACard(parent, args, context, info) {
+
+}
+
 module.exports = {
   newPlayer,
   newGame,
   generateRoundInput,
   playACardToTableau,
+  discardACard,
 }

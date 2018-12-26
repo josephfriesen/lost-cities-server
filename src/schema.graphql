@@ -4,6 +4,7 @@ type Query {
   getAllCards: [Card!]!
   constructRandomizedDeckInstances: [CardInstance!]!
   getPlayerHand(player: Int, round: ID): [Card!]!
+  getCurrentRound(gameId: ID): Round
 }
 
 type Mutation {
@@ -11,4 +12,5 @@ type Mutation {
   newGame(player1: ID!, player2: ID!, roundsNum: Int): Game
   generateRoundInput: Round
   playACardToTableau(gameId: ID!, cardId: ID!): Round
+  discardACard: Round
 }

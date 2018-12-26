@@ -33,8 +33,37 @@ function getPlayerHand(parent, args, context, info) {
   }, info)
 }
 
+async function getCurrentRound(parent, args, context, info) {
+  let player;
+  let roundNum;
+  const roundQuery = await context.db.query.games({ where: { id: args.gameId } },
+  `{
+    currentPlayer
+    currentRound
+  }`).then(response => {
+    player = response[0].currentPlayer;
+    roundNum = response[0].currentRound;
+    return context.db.query.games({ where: { id: args.gameId } },
+    `{
+      rounds(where: { roundNumInGame: ${roundNum} }) {
+        id
+        roundNumInGame
+        player1Score
+        player1Hand { id color cardType expeditionValue }
+        player1Tableau { id color cardType expeditionValue }
+        player2Score
+        player2Hand { id color cardType expeditionValue }
+        player2Tableau { id color cardType expeditionValue }
+        discardPile { orderIndex card { id color cardType expeditionValue } }
+      }
+    }`)
+  });
+  return roundQuery[0].rounds[0];
+}
+
 module.exports = {
   getAllCards,
   constructRandomizedDeckInstances,
   getPlayerHand,
+  getCurrentRound,
 }
