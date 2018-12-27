@@ -84,6 +84,19 @@ function getRoundScore(arr) {
   return score;
 }
 
+// Shuffle an array. Returns the mutated input array.
+function shuffle(arr) {
+  let ctr = arr.length, temp, index;
+  while (ctr > 0) {
+    index = Math.floor(Math.random() * ctr);
+    ctr--
+    temp = arr[ctr];
+    arr[ctr] = arr[index];
+    arr[index] = temp;
+  }
+  return arr;
+}
+
 module.exports = {
   sortCardsByColorAndValue,
   dealCards,
@@ -91,4 +104,5 @@ module.exports = {
   sortCardsIntoColorPiles,
   getColorScore,
   getRoundScore,
+  shuffle,
 }

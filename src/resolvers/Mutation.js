@@ -1,6 +1,27 @@
 const { getAllCards, constructRandomizedDeckInstances, getCurrentRound } = require('./Query');
-const { sortCardsByColorAndValue, dealCards, getCardIdsFromConstructedInstances, getColorScore, getRoundScore } = require('./GameFunctions');
+const { sortCardsByColorAndValue, dealCards, getCardIdsFromConstructedInstances, getColorScore, getRoundScore, shuffle } = require('./GameFunctions');
 const { players } = require('../models/players');
+
+// This function will query the database to get all sixty cards, and create an array of sixth cardInstance objects in random order. Their createdAt timestamp will determine the order of the draw deck.
+// ARGS: round ID
+// 1) query DB to get all cards
+// 2) create array of card instances in random order
+// 3) call DB createCardInstances mutation
+// 4) update round ID with cardInstances array
+async function createCardInstances(parent, args, context, info) {
+  let deck = await context.db.query.cards();
+  deck = shuffle(deck);
+  const instances = deck.map(card => {
+    return { card: { connect: { id: card.id } } }
+  });
+  const roundUpdateInput = {
+    cards: { create: instances }
+  };
+  return context.db.mutation.updateRound({
+    data: roundUpdateInput,
+    where: { id: args.roundId }
+  }, info)
+}
 
 function newPlayer(parent, args, context, info) {
   return context.db.mutation.createPlayer({
@@ -48,10 +69,6 @@ async function newGame(parent, args, context, info) {
     }
   }
   return context.db.mutation.createGame(input, info);
-}
-
-async function createDrawDeck(parent, args, context, info) {
-
 }
 
 async function playACardToTableau(parent, args, context, info) {
@@ -156,10 +173,10 @@ async function discardACard(parent, args, context, info) {
 }
 
 module.exports = {
+  createCardInstances,
   newPlayer,
   generateRoundInput,
   newGame,
-  createDrawDeck,
   playACardToTableau,
   discardACard,
 }

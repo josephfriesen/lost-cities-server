@@ -5,7 +5,7 @@ const Mutation = require('./resolvers/Mutation');
 const GameFunctions = require('./resolvers/GameFunctions');
 
 const resolvers = {
-  Query, Mutation
+  Query, Mutation,
 }
 
 const server = new GraphQLServer({
