@@ -12,5 +12,6 @@ type Mutation {
   newGame(player1: ID!, player2: ID!, roundsNum: Int): Game
   generateRoundInput: Round
   playACardToTableau(gameId: ID!, cardId: ID!): Round
+  drawCards(cardsToDraw: Int, gameId: ID!): Round
   discardACard: Round
 }

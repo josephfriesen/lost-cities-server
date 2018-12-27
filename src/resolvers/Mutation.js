@@ -1,4 +1,4 @@
-const { getAllCards, constructRandomizedDeckInstances } = require('./Query');
+const { getAllCards, constructRandomizedDeckInstances, getCurrentRound } = require('./Query');
 const { sortCardsByColorAndValue, dealCards, getCardIdsFromConstructedInstances, getColorScore, getRoundScore } = require('./GameFunctions');
 const { players } = require('../models/players');
 
@@ -30,6 +30,9 @@ async function newGame(parent, args, context, info) {
   for (let i = 1; i <= args.roundsNum; i++) {
     let round = await generateRoundInput(parent, args, context, info);
     round.roundNumInGame = i;
+    if (i == 1) {
+      round.currentPlayer = 1;
+    }
     rounds.push(round);
   }
   const input = {
@@ -45,6 +48,10 @@ async function newGame(parent, args, context, info) {
     }
   }
   return context.db.mutation.createGame(input, info);
+}
+
+async function createDrawDeck(parent, args, context, info) {
+
 }
 
 async function playACardToTableau(parent, args, context, info) {
@@ -107,13 +114,52 @@ async function playACardToTableau(parent, args, context, info) {
 }
 
 async function discardACard(parent, args, context, info) {
-
+  let player;
+  let roundNum;
+  const roundQuery = await context.db.query.games({ where: { id: args.gameId } },
+  `{
+    currentPlayer
+    currentRound
+  }`).then(response => {
+    player = response[0].currentPlayer;
+    roundNum = response[0].currentRound;
+    return context.db.query.games({ where: { id: args.gameId } },
+    `{
+      rounds(where: { roundNumInGame: ${roundNum} }) {
+        id
+        player1Hand { id color cardType expeditionValue }
+        player2Hand { id color cardType expeditionValue }
+        discardPile { orderIndex card { id color cardType expeditionValue } }
+      }
+    }`)
+  });
+  let round = roundQuery[0].rounds[0];
+  const index = round.discardPile.length;
+  const discardUpdate = { create: [ { orderIndex: index, card: { connect: { id: args.cardId } } } ] };
+  const handUpdate = { disconnect: { id: cardId } }
+  let updateRoundInput;
+  if (player == 1) {
+    updateRoundInput = {
+      player1Hand: handUpdate,
+      discardPile: discardUpdate
+    }
+  } else {
+    updateRoundInput = {
+      player2Hand: handUpdate,
+      discardPile: discardUpdate
+    }
+  }
+  return context.db.mutation.updateRound({
+    data: updateRoundInput,
+    where: { id: round.id }
+  }, info);
 }
 
 module.exports = {
   newPlayer,
-  newGame,
   generateRoundInput,
+  newGame,
+  createDrawDeck,
   playACardToTableau,
   discardACard,
 }

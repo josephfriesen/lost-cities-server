@@ -22,21 +22,16 @@ type Game {
   currentRound: Int!
   gameInProgress: Boolean! @default(value: "true")
   Winner: Player @relation(name: "GamesWon")
-  currentPlayer: Int @default(value: 1)
 }
 
 type Round {
   id: ID! @unique
   createdAt: DateTime!
   roundNumInGame: Int!
-  drawDeck: [CardInstance!]! @relation(name: "CardsInDrawDeck")
-  player1Hand: [Card!]! @relation(name: "CardsInPlayer1Hand")
-  player1Tableau: [Card!]! @relation(name: "CardsInPlayer1Tableau")
+  currentPlayer: Int @default(value: 1)
+  cards: [CardInstance!]!
   player1Score: Int!
-  player2Hand: [Card!]! @relation(name: "CardsInPlayer2Hand")
-  player2Tableau: [Card!]! @relation(name: "CardsInPlayer2Tableau")
   player2Score: Int!
-  discardPile: [CardInstance!]! @relation(name: "CardsInDiscardPile")
 }
 
 type Card {
@@ -49,8 +44,17 @@ type Card {
 }
 
 type CardInstance {
+  id: ID! @unique
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  round: Round!
   card: Card!
-  orderIndex: Int
+  inDrawDeck: Boolean! @default(value: "true")
+  inDiscard: Boolean! @default(value: "false")
+  inPlayer1Hand: Boolean! @default(value: "false")
+  inPlayer1Tableau: Boolean! @default(value: "false")
+  inPlayer2Hand: Boolean! @default(value: "false")
+  inPlayer2Tableau: Boolean! @default(value: "false")
 }
 
 enum CardTypes {
