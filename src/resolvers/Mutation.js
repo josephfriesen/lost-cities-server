@@ -2,48 +2,38 @@ const { getAllCards, constructRandomizedDeckInstances, getCurrentRound } = requi
 const { sortCardsByColorAndValue, dealCards, getCardIdsFromConstructedInstances, getColorScore, getRoundScore, shuffle } = require('./GameFunctions');
 const { players } = require('../models/players');
 
-// This function will query the database to get all sixty cards, and create an array of sixth cardInstance objects in random order. Their createdAt timestamp will determine the order of the draw deck.
-// ARGS: round ID
-// 1) query DB to get all cards
-// 2) create array of card instances in random order
-// 3) call DB createCardInstances mutation
-// 4) update round ID with cardInstances array
-async function createCardInstances(parent, args, context, info) {
-  let deck = await context.db.query.cards();
-  deck = shuffle(deck);
-  const instances = deck.map(card => {
-    return { card: { connect: { id: card.id } } }
-  });
-  const roundUpdateInput = {
-    cards: { create: instances }
-  };
-  return context.db.mutation.updateRound({
-    data: roundUpdateInput,
-    where: { id: args.roundId }
-  }, info)
-}
-
 function newPlayer(parent, args, context, info) {
   return context.db.mutation.createPlayer({
     data: { ...args }
   }, info)
 }
 
+async function createCardInstances(parent, args, context, info) {
+  // This function will query the database to get all sixty cards, and create an array of sixth cardInstance objects in random order. Their createdAt timestamp will determine the order of the draw deck.
+  // 1) query DB to get all cards
+  // 2) return array of card instances in random order
+  let deck = await context.db.query.cards();
+  deck = shuffle(deck);
+  const instances = deck.map(card => {
+    return { card: { connect: { id: card.id } } }
+  });
+  return instances;
+  // const roundUpdateInput = {
+  //   cards: { create: instances }
+  // };
+  // return context.db.mutation.updateRound({
+  //   data: roundUpdateInput,
+  //   where: { id: args.roundId }
+  // }, info)
+}
+
 async function generateRoundInput(parent, args, context, info) {
-  const deck = await constructRandomizedDeckInstances(parent, args, context, info);
-  const player1Hand = getCardIdsFromConstructedInstances(dealCards(deck, 8));
-  const player2Hand = getCardIdsFromConstructedInstances(dealCards(deck, 8));
-  const roundCreateInput = {
-    drawDeck: { create: deck },
-    player1Hand: { connect: player1Hand },
-    player2Hand: { connect: player2Hand },
-    player1Tableau: [],
-    player2Tableau: [],
-    discardPile: [],
+  const deck = await createCardInstances(parent, args, context, info);
+  return roundCreateInput = {
+    cards: { create: deck },
     player1Score: 0,
     player2Score: 0,
   };
-  return roundCreateInput;
 }
 
 async function newGame(parent, args, context, info) {
@@ -69,6 +59,53 @@ async function newGame(parent, args, context, info) {
     }
   }
   return context.db.mutation.createGame(input, info);
+}
+
+async function dealPlayerHands(parent, args, context, info) {
+  let cardInstances = await context.db.query.round({where: {id: args.roundId}}, `{
+    id
+    cards {
+      id
+      createdAt
+      inDrawDeck
+      inPlayer1Hand
+      inPlayer2Hand
+      card {
+        id
+        color
+        cardType
+        expeditionValue
+      }
+    }
+  }`);
+
+  let player1CardsToUpdate = []; // push IDs into this
+  let player2CardsToUpdate = [];
+  let player1UpdateInput = {
+    inDrawDeck: false,
+    inPlayer1Hand: true
+  };
+  let player2UpdateInput = {
+    inDrawDeck: false,
+    inPlayer2Hand: true
+  };
+  for (let i = 0; i < 8; i++) {
+    player1CardsToUpdate.push(cardInstances.cards[i].id);
+    player2CardsToUpdate.push(cardInstances.cards[i+8].id);
+  }
+
+  await context.db.mutation.updateManyCardInstances({
+    data: player1UpdateInput,
+    where: { id_in: player1CardsToUpdate }
+  }, `{count}`)
+  .then(response => {
+    context.db.mutation.updateManyCardInstances({
+      data: player2UpdateInput,
+      where: { id_in: player2CardsToUpdate }
+    }, `{count}`);
+  });
+
+  return context.db.query.round({where: {id: args.roundId}}, info);
 }
 
 async function playACardToTableau(parent, args, context, info) {
@@ -173,10 +210,11 @@ async function discardACard(parent, args, context, info) {
 }
 
 module.exports = {
-  createCardInstances,
   newPlayer,
+  createCardInstances,
   generateRoundInput,
   newGame,
+  dealPlayerHands,
   playACardToTableau,
   discardACard,
 }
