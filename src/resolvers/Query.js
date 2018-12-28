@@ -22,15 +22,29 @@ async function constructRandomizedDeckInstances(parent, args, context, info) {
   return output;
 }
 
-function getPlayerHand(parent, args, context, info) {
-  let hand;
-  if (args.player == 1) { hand = "player1Hand" }
-  else { hand = "player2Hand" }
-  return context.db.query.rounds({
-    where: {
-      id: args.id
+async function getPlayerHand(parent, args, context, info) {
+  if (args.currentPlayer == 1) {
+    player = "inPlayer1Hand";
+  } else {
+    player = "inPlayer2Hand";
+  }
+  let cards;
+  const hand = await context.db.query.rounds({
+    where: {id: args.roundId},
+  }, `{
+    cards(where: {${player}: true}) {
+      id
+      updatedAt
+      ${player}
+      card {
+        id
+        color
+        cardType
+        expeditionValue
+      }
     }
-  }, info)
+  }`);
+  console.log(hand) // need to return the right object here.... thoughts?
 }
 
 async function getCurrentRound(parent, args, context, info) {

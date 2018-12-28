@@ -29,23 +29,28 @@ async function createCardInstances(parent, args, context, info) {
 
 async function generateRoundInput(parent, args, context, info) {
   const deck = await createCardInstances(parent, args, context, info);
-  return roundCreateInput = {
+  const roundCreateInput = {
     cards: { create: deck },
     player1Score: 0,
     player2Score: 0,
   };
+  return roundCreateInput;
 }
 
 async function newGame(parent, args, context, info) {
-  const rounds = [];
-  for (let i = 1; i <= args.roundsNum; i++) {
-    let round = await generateRoundInput(parent, args, context, info);
-    round.roundNumInGame = i;
-    if (i == 1) {
-      round.currentPlayer = 1;
+  async function generateRounds(parent, args, context, info) {
+    let rounds = [];
+    for (let i = 1; i <= args.roundsNum; i++) {
+      let round = await generateRoundInput(parent, args, context, info);
+      round.roundNumInGame = i;
+      if (i == 1) {
+        round.currentPlayer = 1;
+      }
+      rounds.push(round);
     }
-    rounds.push(round);
+    return rounds;
   }
+  const rounds = await generateRounds(parent, args, context, info);
   const input = {
     data: {
       roundsNum: args.roundsNum,
@@ -62,6 +67,7 @@ async function newGame(parent, args, context, info) {
 }
 
 async function dealPlayerHands(parent, args, context, info) {
+  // ARGS: roundId
   let cardInstances = await context.db.query.round({where: {id: args.roundId}}, `{
     id
     cards {
@@ -79,7 +85,7 @@ async function dealPlayerHands(parent, args, context, info) {
     }
   }`);
 
-  let player1CardsToUpdate = []; // push IDs into this
+  let player1CardsToUpdate = [];
   let player2CardsToUpdate = [];
   let player1UpdateInput = {
     inDrawDeck: false,
@@ -109,62 +115,7 @@ async function dealPlayerHands(parent, args, context, info) {
 }
 
 async function playACardToTableau(parent, args, context, info) {
-  let player;
-  let roundNum;
-  const roundQuery = await context.db.query.games({ where: { id: args.gameId } },
-  `{
-    currentPlayer
-    currentRound
-  }`).then(response => {
-    player = response[0].currentPlayer;
-    roundNum = response[0].currentRound;
-    return context.db.query.games({ where: { id: args.gameId } },
-    `{
-      rounds(where: { roundNumInGame: ${roundNum} }) {
-        id
-        player1Hand { id color cardType expeditionValue }
-        player1Tableau { id color cardType expeditionValue }
-        player2Hand { id color cardType expeditionValue }
-        player2Tableau { id color cardType expeditionValue }
-      }
-    }`)
-  });
-  let round = roundQuery[0].rounds[0];
-  const cardUpdate = [ { id: args.cardId } ];
-  const handUpdate = { disconnect: cardUpdate };
-  const tableauUpdate = { connect: cardUpdate };
-  let roundUpdateInput;
-
-  if (player == 1) {
-    round.player1Hand.forEach(testCard => {
-      if (testCard.id == args.cardId) {
-        round.player1Tableau.push(testCard);
-      }
-    })
-    const newPlayer1Score = getRoundScore(round.player1Tableau);
-    updateRoundInput = {
-      player1Score: newPlayer1Score,
-      player1Hand: handUpdate,
-      player1Tableau: tableauUpdate
-    }
-  } else {
-    round.player2Hand.forEach(testCard => {
-      if (testCard.id == args.cardId) {
-        round.player2Tableau.push(testCard)
-      }
-    })
-    const newPlayer2Score = getRoundScore(round.player2Tableau);
-    updateRoundInput = {
-      player2Score: newPlayer2Score,
-      player2Hand: handUpdate,
-      player2Tableau: tableauUpdate
-    }
-  }
-
-  return context.db.mutation.updateRound({
-    data: updateRoundInput,
-    where: { id: round.id }
-  }, info);
+  // ARGS: roundId
 }
 
 async function discardACard(parent, args, context, info) {

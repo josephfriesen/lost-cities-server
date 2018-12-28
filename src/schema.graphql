@@ -3,8 +3,8 @@
 type Query {
   getAllCards: [Card!]!
   constructRandomizedDeckInstances: [CardInstance!]!
-  getPlayerHand(player: Int, round: ID): [Card!]!
   getCurrentRound(gameId: ID): Round
+  getPlayerHand(currentPlayer: Int!, roundId: ID!): [CardInstance!]
 }
 
 type Mutation {
