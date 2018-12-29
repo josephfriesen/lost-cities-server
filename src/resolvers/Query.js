@@ -28,8 +28,7 @@ async function getPlayerHand(parent, args, context, info) {
   } else {
     player = "inPlayer2Hand";
   }
-  let cards;
-  const hand = await context.db.query.rounds({
+  const query = await context.db.query.rounds({
     where: {id: args.roundId},
   }, `{
     cards(where: {${player}: true}) {
@@ -44,7 +43,8 @@ async function getPlayerHand(parent, args, context, info) {
       }
     }
   }`);
-  console.log(hand) // need to return the right object here.... thoughts?
+  // console.log(query);
+  return query[0].cards;
 }
 
 async function getCurrentRound(parent, args, context, info) {
