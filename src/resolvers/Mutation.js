@@ -109,6 +109,77 @@ async function dealPlayerHands(parent, args, context, info) {
 
 async function playACardToTableau(parent, args, context, info) {
   // ARGS: roundId, cardInstanceId
+  const query = await context.db.query.rounds({where: { id: args.roundId }}, `{
+    currentPlayer
+    cards(where: {
+      OR: [
+        { inPlayer1Hand: true },
+        { inPlayer1Tableau: true },
+        { inPlayer2Hand: true },
+        { inPlayer2Tableau: true }
+      ]
+    }) {
+      id
+      inPlayer1Hand
+      inPlayer2Hand
+      inPlayer1Tableau
+      inPlayer2Tableau
+      card {
+        color
+        cardType
+        expeditionValue
+      }
+    }
+  }`);
+
+  const player = query[0].currentPlayer;
+  const cardInstances = query[0].cards;
+  let updateCardInput;
+  let updateRoundInput;
+
+  if (player == 1) {
+    let tableau = [];
+    cardInstances.forEach(instance => {
+      if (instance.inPlayer1Tableau || instance.id == args.cardInstanceId) {
+        tableau.push(instance.card);
+      }
+    })
+    updateCardInput = {
+      inPlayer1Hand: false,
+      inPlayer1Tableau: true
+    }
+    updateRoundInput = {
+      player1Score: getRoundScore(tableau)
+    };
+  } else {
+    let tableau = [];
+    cardInstances.forEach(instance => {
+      if (instance.inPlayer2Tableau || instance.id == args.cardInstanceId) {
+        tableau.push(instance.card);
+      }
+    })
+    updateCardInput = {
+      inPlayer2Hand: false,
+      inPlayer2Tableau: true
+    }
+    updateRoundInput = {
+      player2Score: getRoundScore(tableau)
+    };
+  }
+
+  context.db.mutation.updateCardInstance({
+    data: updateCardInput,
+    where: { id: args.cardInstanceId }
+  }, `{id}`);
+
+  return context.db.mutation.updateRound({
+    data: updateRoundInput,
+    where: { id: args.roundId }
+  }, info);
+}
+
+async function discardACard(parent, args, context, info) {
+  // ARGS: roundId, cardInstanceId
   let round;
   await context.db.query.rounds({where: { id: args.roundId }}, `{
     currentPlayer
@@ -140,48 +211,6 @@ async function playACardToTableau(parent, args, context, info) {
   return context.db.mutation.updateCardInstance({
     data: updateCardInput,
     where: { id: args.cardInstanceId }
-  }, info);
-}
-
-async function discardACard(parent, args, context, info) {
-  let player;
-  let roundNum;
-  const roundQuery = await context.db.query.games({ where: { id: args.gameId } },
-  `{
-    currentPlayer
-    currentRound
-  }`).then(response => {
-    player = response[0].currentPlayer;
-    roundNum = response[0].currentRound;
-    return context.db.query.games({ where: { id: args.gameId } },
-    `{
-      rounds(where: { roundNumInGame: ${roundNum} }) {
-        id
-        player1Hand { id color cardType expeditionValue }
-        player2Hand { id color cardType expeditionValue }
-        discardPile { orderIndex card { id color cardType expeditionValue } }
-      }
-    }`)
-  });
-  let round = roundQuery[0].rounds[0];
-  const index = round.discardPile.length;
-  const discardUpdate = { create: [ { orderIndex: index, card: { connect: { id: args.cardId } } } ] };
-  const handUpdate = { disconnect: { id: cardId } }
-  let updateRoundInput;
-  if (player == 1) {
-    updateRoundInput = {
-      player1Hand: handUpdate,
-      discardPile: discardUpdate
-    }
-  } else {
-    updateRoundInput = {
-      player2Hand: handUpdate,
-      discardPile: discardUpdate
-    }
-  }
-  return context.db.mutation.updateRound({
-    data: updateRoundInput,
-    where: { id: round.id }
   }, info);
 }
 
