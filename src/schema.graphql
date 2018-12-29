@@ -13,6 +13,6 @@ type Mutation {
   generateRoundInput: Round
   newGame(player1: ID!, player2: ID!, roundsNum: Int): Game
   dealPlayerHands(roundId: ID!): Round
-  playACardToTableau(gameId: ID!, cardId: ID!): Round
+  playACardToTableau(roundId: ID!, cardInstanceId: ID!): CardInstance
   discardACard: Round
 }

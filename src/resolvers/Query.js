@@ -39,7 +39,6 @@ async function getCurrentRoundIdFromGame(parent, args, context, info) {
   let id;
   output.rounds.forEach(round => {
     if (output.currentRound == round.roundNumInGame) {
-      console.log("HIT. RoundNumInGame: ", round.roundNumInGame);
       id = round.id;
     }
   })

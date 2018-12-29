@@ -18,13 +18,6 @@ async function createCardInstances(parent, args, context, info) {
     return { card: { connect: { id: card.id } } }
   });
   return instances;
-  // const roundUpdateInput = {
-  //   cards: { create: instances }
-  // };
-  // return context.db.mutation.updateRound({
-  //   data: roundUpdateInput,
-  //   where: { id: args.roundId }
-  // }, info)
 }
 
 async function generateRoundInput(parent, args, context, info) {
@@ -115,7 +108,39 @@ async function dealPlayerHands(parent, args, context, info) {
 }
 
 async function playACardToTableau(parent, args, context, info) {
-  // ARGS: roundId
+  // ARGS: roundId, cardInstanceId
+  let round;
+  await context.db.query.rounds({where: { id: args.roundId }}, `{
+    currentPlayer
+    player1Score
+    player2Score
+    cards(where: { id: "${args.cardInstanceId}" }) {
+      id
+      inPlayer1Hand
+      inPlayer2Hand
+      inPlayer1Tableau
+      inPlayer2Tableau
+    }
+  }`).then(response => round = response[0]);
+  console.log(round);
+  let updateCardInput
+  if (round.currentPlayer == 1) {
+    console.log("Card played by player 1");
+    updateCardInput = {
+      inPlayer1Hand: false,
+      inPlayer1Tableau: true
+    }
+  } else {
+    console.log("Card played by player 2");
+    updateCardInput = {
+      inPlayer2Hand: false,
+      inPlayer2Tableau: true
+    }
+  }
+  return context.db.mutation.updateCardInstance({
+    data: updateCardInput,
+    where: { id: args.cardInstanceId }
+  }, info);
 }
 
 async function discardACard(parent, args, context, info) {
